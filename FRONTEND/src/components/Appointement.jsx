@@ -26,7 +26,7 @@ const Appointment = () => {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/auth/doctors');
+        const res = await axios.get('https://mern-healthcare.onrender.com/api/auth/doctors');
         setDoctors(res.data);
       } catch (err) {
         setError('Failed to fetch doctors.');
@@ -78,7 +78,7 @@ const Appointment = () => {
 
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/appointments',
+        'https://mern-healthcare.onrender.com/api/appointments',
         formData,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },

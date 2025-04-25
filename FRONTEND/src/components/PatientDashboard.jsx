@@ -12,21 +12,21 @@ const PatientDashboard = () => {
 
   useEffect(() => {
     axios
-      .get('http://localhost:5000/api/auth/me', {
+      .get('https://mern-healthcare.onrender.com/api/auth/me', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       .then((res) => setPersonalDetails(res.data))
       .catch((err) => setError('Failed to fetch personal details.'));
 
     axios
-      .get('http://localhost:5000/api/appointments/patient', {
+      .get('https://mern-healthcare.onrender.com/api/appointments/patient', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       .then((res) => setAppointments(res.data))
       .catch((err) => setError('Failed to fetch appointments.'));
 
     axios
-      .get('http://localhost:5000/api/documents/patient', {
+      .get('https://mern-healthcare.onrender.com/api/documents/patient', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       .then((res) => setDocuments(res.data))
@@ -53,7 +53,7 @@ const PatientDashboard = () => {
         return;
       }
       await axios.put(
-        `http://localhost:5000/api/appointments/${appointmentId}`,
+        `https://mern-healthcare.onrender.com/api/appointments/${appointmentId}`,
         {
           date: rescheduleDate[appointmentId],
         },
@@ -75,7 +75,7 @@ const PatientDashboard = () => {
   const handleCancel = async (appointmentId) => {
     try {
       setError('');
-      await axios.delete(`http://localhost:5000/api/appointments/${appointmentId}`, {
+      await axios.delete(`https://mern-healthcare.onrender.com/api/appointments/${appointmentId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setAppointments(appointments.filter((app) => app._id !== appointmentId));

@@ -16,28 +16,28 @@ const DoctorDashboard = () => {
 
   useEffect(() => {
     axios
-      .get('http://localhost:5000/api/auth/me', {
+      .get('https://mern-healthcare.onrender.com/api/auth/me', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       .then((res) => setPersonalDetails(res.data))
       .catch((err) => setError('Failed to fetch personal details.'));
 
     axios
-      .get('http://localhost:5000/api/appointments/doctor', {
+      .get('https://mern-healthcare.onrender.com/api/appointments/doctor', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       .then((res) => setAppointments(res.data))
       .catch((err) => setError('Failed to fetch appointments.'));
 
     axios
-      .get('http://localhost:5000/api/documents/doctor', {
+      .get('https://mern-healthcare.onrender.com/api/documents/doctor', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       .then((res) => setDocuments(res.data))
       .catch((err) => setError('Failed to fetch documents.'));
 
     axios
-      .get('http://localhost:5000/api/documents/patients', {
+      .get('https://mern-healthcare.onrender.com/api/documents/patients', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       })
       .then((res) => setPatients(res.data))
@@ -56,7 +56,7 @@ const DoctorDashboard = () => {
     try {
       setError('');
       await axios.put(
-        `http://localhost:5000/api/appointments/${appointmentId}`,
+        `https://mern-healthcare.onrender.com/api/appointments/${appointmentId}`,
         { status: 'accepted' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -74,7 +74,7 @@ const DoctorDashboard = () => {
     try {
       setError('');
       await axios.put(
-        `http://localhost:5000/api/appointments/${appointmentId}`,
+        `https://mern-healthcare.onrender.com/api/appointments/${appointmentId}`,
         { status: 'rejected' },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -100,7 +100,7 @@ const DoctorDashboard = () => {
         return;
       }
       await axios.put(
-        `http://localhost:5000/api/appointments/${appointmentId}`,
+        `https://mern-healthcare.onrender.com/api/appointments/${appointmentId}`,
         { date: rescheduleDate[appointmentId] },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -143,7 +143,7 @@ const DoctorDashboard = () => {
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/documents/upload', formData, {
+      const res = await axios.post('https://mern-healthcare.onrender.com/api/documents/upload', formData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data',
@@ -162,7 +162,7 @@ const DoctorDashboard = () => {
   const handleDelete = async (documentId) => {
     try {
       setError('');
-      await axios.delete(`http://localhost:5000/api/documents/${documentId}`, {
+      await axios.delete(`https://mern-healthcare.onrender.com/api/documents/${documentId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setDocuments(documents.filter((doc) => doc._id !== documentId));

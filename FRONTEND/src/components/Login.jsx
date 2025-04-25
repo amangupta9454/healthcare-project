@@ -40,7 +40,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { role, email, password });
+      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/login', { role, email, password });
       setMessage(res.data.message);
       setForm('otp');
     } catch (err) {
@@ -51,7 +51,7 @@ const Login = () => {
   const verifyOtp = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/verify-otp', { email, otp });
+      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/verify-otp', { email, otp });
       login(res.data.token);
       setMessage(res.data.message);
       navigate(role === 'patient' ? '/patient-dashboard' : '/doctor-dashboard');
@@ -64,7 +64,7 @@ const Login = () => {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/forgot-password', { email });
       setMessage(res.data.message);
       setForm('reset');
     } catch (err) {
@@ -75,7 +75,7 @@ const Login = () => {
   const resetPassword = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/reset-password', { email, otp, newPassword });
+      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/reset-password', { email, otp, newPassword });
       setMessage(res.data.message);
       setForm('login');
     } catch (err) {
@@ -95,7 +95,7 @@ const Login = () => {
         }
       });
 
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData, {
+      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/register', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setMessage(res.data.message);
@@ -108,7 +108,7 @@ const Login = () => {
   const verifyRegOtp = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/verify-reg-otp', { email: regData.email, otp: regOtp });
+      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/verify-reg-otp', { email: regData.email, otp: regOtp });
       setMessage(res.data.message);
       setForm('login');
     } catch (err) {
