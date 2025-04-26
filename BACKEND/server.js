@@ -11,9 +11,14 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 app.use(cors({
-  origin: ['*'],
-  credentials: true
+  origin: ['http://localhost:5173', 'https://your-frontend-domain.com'], // Add your frontend domains
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow necessary methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow necessary headers
+  credentials: true, // If using cookies or auth headers
 }));
+
+// Handle preflight OPTIONS requests
+app.options('*', cors());
 app.use(express.json());
 
 // Configure Multer for file uploads
