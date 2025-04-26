@@ -22,7 +22,6 @@ export const AuthProvider = ({ children }) => {
       }
     }
   }, []);
-  
 
   const login = (token) => {
     try {
