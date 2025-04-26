@@ -10,7 +10,10 @@ const multer = require('multer');
 const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['*'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Configure Multer for file uploads
