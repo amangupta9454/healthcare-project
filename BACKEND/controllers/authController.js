@@ -40,6 +40,11 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'All required fields must be provided.' });
     }
 
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+    }
+
     // Validate Aadhar
     if (!/^\d{12}$/.test(aadhar)) {
       return res.status(400).json({ message: 'Aadhar number must be 12 digits.' });
@@ -51,21 +56,22 @@ exports.register = async (req, res) => {
     }
 
     // Check for existing email
-    const existingEmail = await User.findOne({ email });
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
     if (existingEmail) {
+     
       return res.status(400).json({ message: 'Email already exists.' });
     }
 
     // Check for existing aadhar
     const existingAadhar = await User.findOne({ aadhar });
     if (existingAadhar) {
+      
       return res.status(400).json({ message: 'Aadhar already exists.' });
     }
 
     // Handle image upload for doctors
     let imgUrl = '';
     if (role === 'doctor' && req.file) {
-      // Validate file size (1MB = 1 * 1024 * 1024 bytes)
       if (req.file.size > 1 * 1024 * 1024) {
         return res.status(400).json({ message: 'Image size must be less than 1MB.' });
       }
@@ -79,16 +85,23 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Profile image is required for doctors.' });
     }
 
+    // Log password before hashing
+   
+
+    // Hash password (single hashing)
+    const hashedPassword = await bcrypt.hash(password, 10);
+   
+
     // Prepare user data
     const userData = {
       name,
       age,
       gender,
       role,
-      email,
+      email: email.toLowerCase(),
       mobile,
       aadhar,
-      password: await bcrypt.hash(password, 10),
+      password: hashedPassword,
       ...(role === 'doctor' && { img: imgUrl, shortDesc, specialty, experience, qualifications }),
     };
 
@@ -104,13 +117,26 @@ exports.register = async (req, res) => {
 
     await transporter.sendMail({
       to: email,
-      subject: 'Registration OTP',
-      text: `Your OTP for registration is: ${otp}`,
+      subject: 'Registration OTP - HealthCare Clinic',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #2c3e50; text-align: center;">Your OTP for Registration</h2>
+          <p style="font-size: 16px; color: #34495e;">
+            Dear ${name},<br/><br/>
+            Your One-Time Password (OTP) for completing your registration with HealthCare Clinic is: <strong>${otp}</strong><br/>
+            This OTP is valid for 10 minutes. Do not share it with anyone.
+          </p>
+          <p style="font-size: 16px; color: #34495e; text-align: center; margin-top: 20px;">
+            Best Regards,<br/>
+            HealthCare Clinic Team
+          </p>
+        </div>
+      `,
     });
 
     res.status(201).json({ message: 'OTP sent to email. Please verify.' });
   } catch (err) {
-    console.error(err);
+    console.error('Error in register:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -119,7 +145,7 @@ exports.verifyRegOtp = async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    const user = await User.findOne({ email, otp, otpExpires: { $gt: Date.now() } });
+    const user = await User.findOne({ email: email.toLowerCase(), otp, otpExpires: { $gt: Date.now() } });
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired OTP.' });
     }
@@ -130,6 +156,7 @@ exports.verifyRegOtp = async (req, res) => {
 
     res.json({ message: 'Registration successful. Please log in.' });
   } catch (err) {
+    console.error('Error in verifyRegOtp:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -143,16 +170,19 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
-    const user = await User.findOne({ email, role });
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase(), role });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
+    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
+    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
     user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
@@ -160,12 +190,26 @@ exports.login = async (req, res) => {
 
     await transporter.sendMail({
       to: email,
-      subject: 'Login OTP',
-      text: `Your OTP for login is: ${otp}`,
+      subject: 'Login OTP - HealthCare Clinic',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #2c3e50; text-align: center;">Your OTP for Login</h2>
+          <p style="font-size: 16px; color: #34495e;">
+            Dear ${user.name},<br/><br/>
+            Your One-Time Password (OTP) for logging into HealthCare Clinic is: <strong>${otp}</strong><br/>
+            This OTP is valid for 10 minutes. Do not share it with anyone.
+          </p>
+          <p style="font-size: 16px; color: #34495e; text-align: center; margin-top: 20px;">
+            Best Regards,<br/>
+            HealthCare Clinic Team
+          </p>
+        </div>
+      `,
     });
 
     res.json({ message: 'OTP sent to email. Please verify.' });
   } catch (err) {
+    console.error('Error in login:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -174,7 +218,7 @@ exports.verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    const user = await User.findOne({ email, otp, otpExpires: { $gt: Date.now() } });
+    const user = await User.findOne({ email: email.toLowerCase(), otp, otpExpires: { $gt: Date.now() } });
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired OTP.' });
     }
@@ -187,8 +231,9 @@ exports.verifyOtp = async (req, res) => {
       expiresIn: '1h',
     });
 
-    res.json({ token, message: 'Login successful.' });
+    res.json({ token, message: 'Login successful.', user: { id: user._id, role: user.role, email: user.email } });
   } catch (err) {
+    console.error('Error in verifyOtp:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -197,7 +242,7 @@ exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(400).json({ message: 'User not found.' });
     }
@@ -209,12 +254,26 @@ exports.forgotPassword = async (req, res) => {
 
     await transporter.sendMail({
       to: email,
-      subject: 'Password Reset OTP',
-      text: `Your OTP for password reset is: ${otp}`,
+      subject: 'Password Reset OTP - HealthCare Clinic',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #2c3e50; text-align: center;">Your OTP for Password Reset</h2>
+          <p style="font-size: 16px; color: #34495e;">
+            Dear ${user.name},<br/><br/>
+            Your One-Time Password (OTP) for resetting your password is: <strong>${otp}</strong><br/>
+            This OTP is valid for 10 minutes. Do not share it with anyone.
+          </p>
+          <p style="font-size: 16px; color: #34495e; text-align: center; margin-top: 20px;">
+            Best Regards,<br/>
+            HealthCare Clinic Team
+          </p>
+        </div>
+      `,
     });
 
     res.json({ message: 'OTP sent to email. Please verify.' });
   } catch (err) {
+    console.error('Error in forgotPassword:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -223,18 +282,27 @@ exports.resetPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body;
 
   try {
-    const user = await User.findOne({ email, otp, otpExpires: { $gt: Date.now() } });
+    const user = await User.findOne({ email: email.toLowerCase(), otp, otpExpires: { $gt: Date.now() } });
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired OTP.' });
     }
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    // Validate new password
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long.' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
 
     res.json({ message: 'Password reset successful. Please log in.' });
   } catch (err) {
+    console.error('Error in resetPassword:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -247,6 +315,7 @@ exports.getMe = async (req, res) => {
     }
     res.json(user);
   } catch (err) {
+    console.error('Error in getMe:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -256,6 +325,7 @@ exports.getDoctors = async (req, res) => {
     const doctors = await User.find({ role: 'doctor' }).select('name _id');
     res.json(doctors);
   } catch (err) {
+    console.error('Error in getDoctors:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };

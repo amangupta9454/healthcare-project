@@ -23,7 +23,7 @@ const AdminDashboard = () => {
 
     // Fetch analytics
     axios
-      .get('https://mern-healthcare.onrender.com/api/admin/analytics', {
+      .get(`${process.env.VITE_BACKEND_URL}/api/admin/analytics`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setAnalytics(res.data))
@@ -31,7 +31,7 @@ const AdminDashboard = () => {
 
     // Fetch doctors
     axios
-      .get('https://mern-healthcare.onrender.com/api/admin/doctors', {
+      .get(`${process.env.VITE_BACKEND_URL}/api/admin/doctors`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setDoctors(res.data))
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
 
     // Fetch patients
     axios
-      .get('https://mern-healthcare.onrender.com/api/admin/patients', {
+      .get(`${process.env.VITE_BACKEND_URL}/api/admin/patients`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setPatients(res.data))
@@ -47,7 +47,7 @@ const AdminDashboard = () => {
 
     // Fetch recent appointments
     axios
-      .get('https://mern-healthcare.onrender.com/api/admin/appointments/recent', {
+      .get(`${process.env.VITE_BACKEND_URL}/api/admin/appointments/recent`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setAppointments(res.data))
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
     setError('');
     try {
       await axios.put(
-        'https://mern-healthcare.onrender.com/api/admin/update',
+        `${process.env.VITE_BACKEND_URL}/api/admin/update`,
         editAdmin,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
     setError('');
     try {
       await axios.put(
-        `https://mern-healthcare.onrender.com/api/admin/doctors/${id}/edit`,
+        `${process.env.VITE_BACKEND_URL}/api/admin/doctors/${id}/edit`,
         editDoctor,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -91,7 +91,7 @@ const AdminDashboard = () => {
   const handleRemoveDoctor = async (id) => {
     setError('');
     try {
-      await axios.delete(`https://mern-healthcare.onrender.com/api/admin/doctors/${id}`, {
+      await axios.delete(`${process.env.VITE_BACKEND_URL}/api/admin/doctors/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setDoctors(doctors.filter((doc) => doc._id !== id));
@@ -105,7 +105,7 @@ const AdminDashboard = () => {
     setError('');
     try {
       await axios.put(
-        `https://mern-healthcare.onrender.com/api/admin/doctors/${id}/block`,
+        `${process.env.VITE_BACKEND_URL}/api/admin/doctors/${id}/block`,
         {},
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -119,7 +119,7 @@ const AdminDashboard = () => {
   const handleRemovePatient = async (id) => {
     setError('');
     try {
-      await axios.delete(`https://mern-healthcare.onrender.com/api/admin/patients/${id}`, {
+      await axios.delete(`${process.env.VITE_BACKEND_URL}/api/admin/patients/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setPatients(patients.filter((pat) => pat._id !== id));
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
     setError('');
     try {
       await axios.put(
-        `https://mern-healthcare.onrender.com/api/admin/patients/${id}/block`,
+        `${process.env.VITE_BACKEND_URL}/api/admin/patients/${id}/block`,
         {},
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -148,7 +148,7 @@ const AdminDashboard = () => {
     setError('');
     try {
       await axios.put(
-        `https://mern-healthcare.onrender.com/api/admin/patients/${id}/unblock`,
+       `${process.env.VITE_BACKEND_URL}/api/admin/patients/${id}/unblock`,
         {},
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -162,7 +162,7 @@ const AdminDashboard = () => {
   const handleCancelAppointment = async (id) => {
     setError('');
     try {
-      await axios.delete(`https://mern-healthcare.onrender.com/api/admin/appointments/${id}`, {
+      await axios.delete(`${process.env.VITE_BACKEND_URL}/api/admin/appointments/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setAppointments(appointments.filter((app) => app._id !== id));
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
       }
 
       await axios.put(
-        `https://mern-healthcare.onrender.com/api/admin/appointments/${id}/reschedule`,
+        `${process.env.VITE_BACKEND_URL}/api/admin/appointments/${id}/reschedule`,
         { date: newDate },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

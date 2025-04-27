@@ -14,7 +14,7 @@ const AdminLogin = () => {
     e.preventDefault();
     setError('');
     try {
-      await axios.post('https://mern-healthcare.onrender.com/api/admin/login', { email, password });
+      await axios.post(`${process.env.VITE_BACKEND_URL}/api/admin/login`, { email, password });
       setIsOtpSent(true);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP.');
@@ -25,7 +25,7 @@ const AdminLogin = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await axios.post('https://mern-healthcare.onrender.com/api/admin/verify-otp', { email, otp });
+      const res = await axios.post(`${process.env.VITE_BACKEND_URL}/api/admin/verify-otp`, { email, otp });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('admin', JSON.stringify(res.data.admin));
       navigate('/admin/dashboard');

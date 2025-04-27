@@ -1,35 +1,25 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  age: { type: Number, required: true },
+  gender: { type: String, required: true, enum: ['male', 'female', 'other'] },
+  role: { type: String, required: true, enum: ['patient', 'doctor'] },
+  email: { type: String, required: true, unique: true, lowercase: true },
+  mobile: { type: String, required: true },
+  aadhar: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  age: { type: Number },
-  gender: { type: String },
-  mobile: { type: String },
-  aadhar: { type: String },
-  role: { type: String, enum: ['patient', 'doctor'], required: true },
-  shortDesc: { type: String }, // For doctors
-  specialty: { type: String }, // For doctors
-  experience: { type: String }, // For doctors
-  qualifications: { type: String }, // For doctors
-  isBlocked: { type: Boolean, default: false }, // For blocking doctors/patients
-  otp: { type: String }, // Store OTP temporarily
-  otpExpires: { type: Date }, // OTP expiration
-});
+  img: { type: String },
+  shortDesc: { type: String },
+  specialty: { type: String },
+  experience: { type: String },
+  qualifications: { type: String },
+  otp: { type: String },
+  otpExpires: { type: Date },
+}, { timestamps: true });
 
-// Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-  next();
-});
-
-// Compare password
-userSchema.methods.comparePassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
+// No pre-save hook for password hashing to avoid double hashing
+// Ensure unique index on email
+userSchema.index({ email: 1 }, { unique: true });
 
 module.exports = mongoose.model('User', userSchema);

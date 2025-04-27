@@ -19,6 +19,7 @@ const Login = () => {
     mobile: '',
     aadhar: '',
     password: '',
+    confirmPassword: '', // Added for confirmation
     img: null,
     shortDesc: '',
     specialty: '',
@@ -40,79 +41,191 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/login', { role, email, password });
+      // Validate inputs
+      if (!email.trim() || !password.trim()) {
+        setMessage('Email and password are required.');
+        return;
+      }
+      if (password.length < 6) {
+        setMessage('Password must be at least 6 characters long.');
+        return;
+      }
+
+      const res = await axios.post(`${process.env.VITE_BACKEND_URL}/api/auth/login`, {
+        role,
+        email: email.trim().toLowerCase(),
+        password: password.trim(),
+      });
       setMessage(res.data.message);
       setForm('otp');
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Login failed');
+      console.error('Login error:', err.response?.data);
+      setMessage(
+        err.response?.data?.message ||
+          'Login failed. Please check your email, password, and role. If you recently registered, ensure you verified the OTP.'
+      );
     }
   };
 
   const verifyOtp = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/verify-otp', { email, otp });
+      if (!otp.trim()) {
+        setMessage('OTP is required.');
+        return;
+      }
+      const res = await axios.post(`${process.env.VITE_BACKEND_URL}/api/auth/verify-otp`, {
+        email: email.trim().toLowerCase(),
+        otp: otp.trim(),
+      });
       login(res.data.token);
       setMessage(res.data.message);
       navigate(role === 'patient' ? '/patient-dashboard' : '/doctor-dashboard');
       setForm('login');
+      setEmail('');
+      setPassword('');
+      setOtp('');
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Invalid OTP');
+      console.error('OTP verification error:', err.response?.data);
+      setMessage(err.response?.data?.message || 'Invalid OTP. Please try again.');
     }
   };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/forgot-password', { email });
+      if (!email.trim()) {
+        setMessage('Email is required.');
+        return;
+      }
+      const res = await axios.post(`${process.env.VITE_BACKEND_URL}/api/auth/forgot-password`, {
+        email: email.trim().toLowerCase(),
+      });
       setMessage(res.data.message);
       setForm('reset');
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Error sending OTP');
+      console.error('Forgot password error:', err.response?.data);
+      setMessage(err.response?.data?.message || 'Error sending OTP. Please try again.');
     }
   };
 
   const resetPassword = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/reset-password', { email, otp, newPassword });
+      if (!otp.trim() || !newPassword.trim()) {
+        setMessage('OTP and new password are required.');
+        return;
+      }
+      if (newPassword.length < 6) {
+        setMessage('New password must be at least 6 characters long.');
+        return;
+      }
+      const res = await axios.post(`${process.env.VITE_BACKEND_URL}/api/auth/reset-password`, {
+        email: email.trim().toLowerCase(),
+        otp: otp.trim(),
+        newPassword: newPassword.trim(),
+      });
       setMessage(res.data.message);
       setForm('login');
+      setEmail('');
+      setOtp('');
+      setNewPassword('');
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Error resetting password');
+      console.error('Reset password error:', err.response?.data);
+      setMessage(err.response?.data?.message || 'Error resetting password. Please try again.');
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
+      // Validate required fields
+      if (
+        !regData.name ||
+        !regData.age ||
+        !regData.gender ||
+        !regData.email ||
+        !regData.mobile ||
+        !regData.aadhar ||
+        !regData.password ||
+        !regData.confirmPassword
+      ) {
+        setMessage('All required fields must be filled.');
+        return;
+      }
+      if (regData.password !== regData.confirmPassword) {
+        setMessage('Passwords do not match.');
+        return;
+      }
+      if (regData.password.length < 6) {
+        setMessage('Password must be at least 6 characters long.');
+        return;
+      }
+      if (!/^\d{12}$/.test(regData.aadhar)) {
+        setMessage('Aadhar number must be 12 digits.');
+        return;
+      }
+      if (
+        regData.role === 'doctor' &&
+        (!regData.img || !regData.shortDesc || !regData.specialty || !regData.experience || !regData.qualifications)
+      ) {
+        setMessage('All doctor-specific fields are required.');
+        return;
+      }
+
       const formData = new FormData();
       Object.keys(regData).forEach((key) => {
         if (key === 'img' && regData[key]) {
           formData.append('img', regData[key]);
-        } else if (regData[key]) {
-          formData.append(key, regData[key]);
+        } else if (regData[key] && key !== 'confirmPassword') {
+          formData.append(key, key === 'email' ? regData[key].trim().toLowerCase() : regData[key].trim());
         }
       });
 
-      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/register', formData, {
+      const res = await axios.post(`${process.env.VITE_BACKEND_URL}/api/auth/register`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setMessage(res.data.message);
       setForm('reg-otp');
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Registration failed');
+      console.error('Registration error:', err.response?.data);
+      setMessage(err.response?.data?.message || 'Registration failed. Please check your details.');
     }
   };
 
   const verifyRegOtp = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://mern-healthcare.onrender.com/api/auth/verify-reg-otp', { email: regData.email, otp: regOtp });
+      if (!regOtp.trim()) {
+        setMessage('OTP is required.');
+        return;
+      }
+      const res = await axios.post(`${process.env.VITE_BACKEND_URL}/api/auth/verify-reg-otp`, {
+        email: regData.email.trim().toLowerCase(),
+        otp: regOtp.trim(),
+      });
       setMessage(res.data.message);
       setForm('login');
+      setRegData({
+        name: '',
+        age: '',
+        gender: '',
+        role: 'patient',
+        email: '',
+        mobile: '',
+        aadhar: '',
+        password: '',
+        confirmPassword: '',
+        img: null,
+        shortDesc: '',
+        specialty: '',
+        experience: '',
+        qualifications: '',
+      });
+      setRegOtp('');
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Invalid OTP');
+      console.error('Registration OTP verification error:', err.response?.data);
+      setMessage(err.response?.data?.message || 'Invalid OTP. Please try again.');
     }
   };
 
@@ -134,7 +247,7 @@ const Login = () => {
         {form === 'login' && (
           <>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Welcome Back</h2>
-            <div onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -170,7 +283,7 @@ const Login = () => {
                 </div>
               </div>
               <button
-                type="submit"
+                type="button"
                 onClick={handleLogin}
                 className="w-full bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 font-semibold"
               >
@@ -200,7 +313,7 @@ const Login = () => {
         {form === 'otp' && (
           <>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Verify OTP</h2>
-            <div onSubmit={verifyOtp} className="space-y-6">
+            <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
                 <input
@@ -212,7 +325,7 @@ const Login = () => {
                 />
               </div>
               <button
-                type="submit"
+                type="button"
                 onClick={verifyOtp}
                 className="w-full bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 font-semibold"
               >
@@ -225,7 +338,7 @@ const Login = () => {
         {form === 'forgot' && (
           <>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Forgot Password</h2>
-            <div onSubmit={handleForgotPassword} className="space-y-6">
+            <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input
@@ -237,7 +350,7 @@ const Login = () => {
                 />
               </div>
               <button
-                type="submit"
+                type="button"
                 onClick={handleForgotPassword}
                 className="w-full bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 font-semibold"
               >
@@ -259,7 +372,7 @@ const Login = () => {
         {form === 'reset' && (
           <>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Reset Password</h2>
-            <div onSubmit={resetPassword} className="space-y-6">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
@@ -283,7 +396,7 @@ const Login = () => {
                 </div>
               </div>
               <button
-                type="submit"
+                type="button"
                 onClick={resetPassword}
                 className="w-full bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 font-semibold"
               >
@@ -296,7 +409,7 @@ const Login = () => {
         {form === 'register' && (
           <>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Create Account</h2>
-            <div onSubmit={handleRegister} className="space-y-6">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -419,6 +532,16 @@ const Login = () => {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                  <input
+                    type="password"
+                    value={regData.confirmPassword}
+                    onChange={(e) => setRegData({ ...regData, confirmPassword: e.target.value })}
+                    className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-50"
+                    required
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
                   <input
                     type="tel"
@@ -442,7 +565,7 @@ const Login = () => {
                 </div>
               </div>
               <button
-                type="submit"
+                type="button"
                 onClick={handleRegister}
                 className="w-full bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 font-semibold"
               >
@@ -464,7 +587,7 @@ const Login = () => {
         {form === 'reg-otp' && (
           <>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-8">Verify OTP</h2>
-            <div onSubmit={verifyRegOtp} className="space-y-6">
+            <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
                 <input
@@ -476,7 +599,7 @@ const Login = () => {
                 />
               </div>
               <button
-                type="submit"
+                type="button"
                 onClick={verifyRegOtp}
                 className="w-full bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 font-semibold"
               >
